@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-use DB;
+
 use Illuminate\Http\Request;
+use App\Author;
+use JWTAuth;
 
 class AuthorController extends Controller
 {
@@ -13,16 +15,16 @@ class AuthorController extends Controller
      */
     public function index()
     {
-        $author = DB::table('authors') -> get();
-        if($author && $author -> count() > 0)
-        {
-            return response()->json([
-                'status' => true,
-                'code' => 200,
-                'data' => $author,
-            ], 200);
+        $author = Author::all();
+        if($author && $author->count() > 0){
+        return response(['message'=> 'Show data success.', 'data'=> $author], 200);
+        }else{
+        return response(['message'=> 'Data not found.', 'data'=> null], 404);
         }
-        return response($author);
+    }
+
+    public function __construct(){
+        $this->middleware('auth:api');
     }
 
     /**
@@ -43,40 +45,15 @@ class AuthorController extends Controller
      */
     public function store(Request $request)
     {
-        try{
-          
-            $name = $request->input('name');
-            $dateBirth  = $request->input('date_of_birth');
-            $placeBirth = $request->input('place_of_birth');
-            $gender     = $request->input('gender');
-            $email      = $request->input('email');
-            $hp         = $request->input('hp');
- 
- 
-            $data = new \App\Author();
-            $data->name = $name;
-            $data->date_of_birth = $dateBirth;
-            $data->place_of_birth = $placeBirth;
-            $data->gender = $gender;
-            $data->email = $email;
-            $data->hp = $hp;
-     
-            if($data->save()){
-                return response()->json([
-                    'status' => true,
-                    'code' => 200,
-                    'message' => 'Berhasil Menambah Author',
-                    'data' => $data,
-                ], 200);
-            }
-        }catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'code' => 200,
-                'message' => $e->getMessage()
-            ], 200);
-        }
+        $author = Author::create ([
+            "name" => $request->name,
+            "date_of_birth" => $request->date_of_birth,
+            "place_of_birth" => $request->place_of_birth,
+            "gender" => $request->gender,
+            "email" => $request->email,
+            "hp" => $request->hp
+            ]);
+            return response(['message'=> 'Create data success.', 'data'=> $author], 201);
     }
 
     /**
@@ -87,7 +64,12 @@ class AuthorController extends Controller
      */
     public function show($id)
     {
-        //
+        $author = Author::find($id);
+        if($author && $author->count() > 0){
+        return response(['message'=> 'Show data success.', 'data'=> $author], 200);
+        }else{
+        return response(['message'=> 'Data not found.', 'data'=> null], 404);
+        }
     }
 
     /**
@@ -110,39 +92,18 @@ class AuthorController extends Controller
      */
     public function update(Request $request, $id)
     {
-        try{
-          
-            $name = $request->input('name');
-            $dateBirth  = $request->input('date_of_birth');
-            $placeBirth = $request->input('place_of_birth');
-            $gender     = $request->input('gender');
-            $email      = $request->input('email');
-            $hp         = $request->input('hp');
- 
- 
-            $data = \App\Author::where('id',$id)->first();
-            $data->name = $name;
-            $data->date_of_birth = $dateBirth;
-            $data->place_of_birth = $placeBirth;
-            $data->gender = $gender;
-            $data->email = $email;
-            $data->hp = $hp;
-     
-            if($data->save()){
-                return response()->json([
-                    'status' => true,
-                    'code' => 200,
-                    'message' => 'Berhasil Update Author',
-                    'data' => $data,
-                ], 200);
-            }
-        }catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'code' => 200,
-                'message' => $e->getMessage()
-            ], 200);
+        $author = Author::find($id);
+        if($author){
+        $author ->name = $request->name;
+        $author ->date_of_birth = $request->date_of_birth;
+        $author ->place_of_birth = $request->place_of_birth;
+        $author ->gender = $request->gender;
+        $author ->email = $request->email;
+        $author ->hp = $request->hp;
+        $author->save();
+        return response(['message'=> 'Update data success.', 'data'=> $author], 200);
+        }else{
+        return response(['message'=> 'Update data failed.', 'data'=> null], 406);
         }
     }
 
@@ -154,22 +115,12 @@ class AuthorController extends Controller
      */
     public function destroy($id)
     {
-        try{
-            $data = \App\Author::where('id',$id)->first();
-            if($data->delete()){
-                return response()->json([
-                    'status' => true,
-                    'code' => 200,
-                    'message' => 'Berhasil Delete Author',
-                ], 200);
-            }
-        }catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'code' => 200,
-                'message' => $e->getMessage()
-            ], 200);
+        $author = Author::find($id);
+        if($author){
+        $author->delete();
+        return response([], 204);
+        }else{
+        return response(['message'=> 'Remove data failed.', 'data'=> null], 406);
         }
     }
 }
